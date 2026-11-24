@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Calculadora de Holerite</title>
+<style>
+:root {
+--ink: #1a1a2e;
+--paper: #f5f0e8;
+--paper-dark: #ede7d9;
+--accent: #c0392b;
+--accent-light: #e74c3c;
+--muted: #7f8c8d;
+--border: #b0a898;
+--form-bg: #1a1a2e;
+--form-card: #16213e;
+--form-border: #0f3460;
+--highlight: #e8c84a;
+--font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+--font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+font-family: var(--font-sans);
+background: var(--form-bg);
+color: #e8e8e8;
+min-height: 100vh;
+}
+
+/* ── LAYOUT UTILS ── */
+.main-layout { display: flex; flex-direction: column; min-height: 100vh; }
+@media (min-width: 1024px) { .main-layout { flex-direction: row; } }
+
+.form-section { width: 100%; flex-shrink: 0; overflow-y: auto; padding: 1.25rem; background: var(--form-bg); }
+@media (min-width: 1024px) { .form-section { width: 24rem; } }
+@media (min-width: 1280px) { .form-section { width: 420px; } }
+
+.flex-1 { flex: 1 1 0%; }
+
+.header-block { margin-bottom: 1.25rem; }
+.kicker {
+font-size: 0.75rem; font-weight: 700; letter-spacing: 0.15em;
+text-transform: uppercase; color: var(--highlight);
+}
+.page-title {
+font-size: 1.25rem; font-weight: 700; color: white; margin-top: 0.25rem;
+font-family: var(--font-sans);
+}
+.page-subtitle { font-size: 0.75rem; margin-top: 0.25rem; color: #778; }
+
+.calc-estimativo-tag {
+font-size: 0.95rem;
+font-weight: 600;
+color: var(--highlight);
+margin-top: 0.4rem;
+letter-spacing: 0.02em;
+font-family: var(--font-sans);
+}
+
+.disclaimer-box {
+font-size: 0.58rem;
+line-height: 1.45;
+color: #667;
+border-top: 1px dashed var(--form-border);
+margin-top: 1.2rem;
+padding-top: 0.7rem;
+}
+.disclaimer-box strong {
+display: block;
+color: #99a5c0;
+font-size: 0.6rem;
+letter-spacing: 0.05em;
+text-transform: uppercase;
+margin-bottom: 0.25rem;
+}
+
+.holerite-disclaimer {
+font-size: 0.52rem;
+line-height: 1.4;
+color: var(--muted);
+text-align: center;
+padding: 0.5rem 1.2rem 0.9rem;
+border-top: 1px dashed var(--border);
+}
+.holerite-disclaimer strong { color: var(--accent); }
+
+.subheading { margin-top: 0.75rem; margin-bottom: 0.25rem; }
+
+.footnote { text-align: center; margin-top: 0.75rem; font-size: 0.58rem; color: #445; }
+
+/* Utilitários genéricos */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.text-center { text-align: center; }
+.mt-3 { margin-top: 0.75rem; }
+
+.section-label {
+font-size: 0.6rem;
+font-weight: 700;
+letter-spacing: 0.18em;
+text-transform: uppercase;
+color: var(--highlight);
+margin-bottom: 0.5rem;
+}
+
+.form-card {
+background: var(--form-card);
+border: 1px solid var(--form-border);
+border-radius: 10px;
+padding: 1.1rem 1.2rem;
+margin-bottom: 1rem;
+}
+
+label {
+display: block;
+font-size: 0.68rem;
+font-weight: 500;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+color: #8899bb;
+margin-bottom: 0.25rem;
+margin-top: 0.65rem;
+}
+label:first-of-type { margin-top: 0; }
+
+input[type="text"], input[type="number"], input[type="month"] {
+width: 100%;
+background: #0d1b2a;
+border: 1px solid var(--form-border);
+border-radius: 6px;
+color: #e8f4f8;
+font-family: var(--font-mono);
+font-size: 0.8rem;
+padding: 0.45rem 0.7rem;
+outline: none;
+transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus {
+border-color: var(--highlight);
+box-shadow: 0 0 0 2px rgba(232,200,74,0.15);
+}
+
+p { margin: 0; }
+
+.toggle-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 0.4rem 0;
+border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.toggle-row:last-child { border-bottom: none; }
+
+.toggle-label {
+font-size: 0.72rem;
+color: #aabbcc;
+font-weight: 500;
+}
+
+.toggle-value {
+width: 100px;
+text-align: right;
+}
+
+.toggle-check {
+width: 16px; height: 16px;
+accent-color: var(--highlight);
+cursor: pointer;
+margin-right: 8px;
+}
+
+.side-input {
+background:#0d1b2a;
+border:1px solid var(--form-border);
+border-radius:4px;
+color:#e8f4f8;
+font-family: var(--font-mono);
+font-size:0.75rem;
+padding:0.2rem 0.4rem;
+}
+
+.extra-row {
+display: flex;
+gap: 0.35rem;
+align-items: center;
+margin-bottom: 0.4rem;
+}
+.extra-row input.extra-desc { flex: 1.3; }
+.extra-row input.extra-valor { flex: 0.8; }
+.extra-row .extra-remove {
+background: transparent;
+border: 1px solid #6b2020;
+color: #e77;
+width: 26px;
+height: 26px;
+flex-shrink: 0;
+border-radius: 5px;
+cursor: pointer;
+font-size: 0.85rem;
+line-height: 1;
+transition: background 0.15s, border-color 0.15s;
+}
+.extra-row .extra-remove:hover {
+background: rgba(231,119,119,0.15);
+border-color: #e77;
+}
+
+.btn-add {
+background: transparent;
+color: var(--highlight);
+font-family: var(--font-sans);
+font-size: 0.68rem;
+font-weight: 600;
+letter-spacing: 0.05em;
+text-transform: uppercase;
+padding: 0.4rem 0.8rem;
+border: 1px dashed var(--highlight);
+border-radius: 6px;
+cursor: pointer;
+width: 100%;
+transition: background 0.15s;
+}
+.btn-add:hover { background: rgba(232,200,74,0.1); }
+
+.btn-print {
+background: linear-gradient(135deg, var(--accent) 0%, #8e1a10 100%);
+color: white;
+font-family: var(--font-sans);
+font-size: 0.78rem;
+font-weight: 700;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+padding: 0.75rem 1.5rem;
+border: none;
+border-radius: 8px;
+cursor: pointer;
+width: 100%;
+margin-top: 0.5rem;
+transition: opacity 0.2s, transform 0.1s;
+box-shadow: 0 4px 15px rgba(192,57,43,0.4);
+}
+.btn-print:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-print:active { transform: translateY(0); }
+
+.btn-clear {
+background: transparent;
+color: #8899bb;
+font-family: var(--font-sans);
+font-size: 0.72rem;
+font-weight: 500;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+padding: 0.6rem 1.5rem;
+border: 1px solid var(--form-border);
+border-radius: 8px;
+cursor: pointer;
+width: 100%;
+margin-top: 0.4rem;
+transition: border-color 0.2s, color 0.2s;
+}
+.btn-clear:hover { border-color: #8899bb; color: #ccd9ee; }
+
+/* ── HOLERITE SIDE ── */
+.holerite-wrapper {
+background: #2c2c3a;
+display: flex;
+align-items: flex-start;
+justify-content: center;
+padding: 2rem 1.5rem;
+min-height: 100vh;
+}
+
+.holerite {
+background: var(--paper);
+color: var(--ink);
+width: 100%;
+max-width: 620px;
+font-family: var(--font-mono);
+font-size: 0.72rem;
+box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.1);
+border-radius: 3px;
+overflow: hidden;
+position: relative;
+}
+
+.holerite::before {
+content: '';
+position: absolute;
+top: 0; left: 0; right: 0;
+height: 5px;
+background: linear-gradient(90deg, var(--accent) 0%, #e74c3c 50%, var(--accent) 100%);
+}
+
+.holerite-header {
+background: var(--ink);
+color: var(--paper);
+padding: 1rem 1.2rem 0.8rem;
+position: relative;
+overflow: hidden;
+}
+.holerite-header::after {
+content: 'HOLERITE';
+position: absolute;
+right: -10px; top: 50%;
+transform: translateY(-50%);
+font-size: 4.5rem;
+font-weight: 700;
+color: rgba(255,255,255,0.04);
+letter-spacing: 0.05em;
+pointer-events: none;
+user-select: none;
+}
+
+.holerite-company {
+font-size: 0.9rem;
+font-weight: 600;
+letter-spacing: 0.02em;
+color: #fff;
+font-family: var(--font-sans);
+margin-bottom: 0.15rem;
+}
+.holerite-cnpj {
+font-size: 0.65rem;
+color: #aaa;
+letter-spacing: 0.05em;
+}
+
+.badge-mes {
+display: inline-block;
+background: var(--accent);
+color: white;
+font-size: 0.62rem;
+font-weight: 700;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+padding: 0.2rem 0.6rem;
+border-radius: 3px;
+margin-top: 0.5rem;
+}
+
+.holerite-employee {
+background: var(--paper-dark);
+padding: 0.7rem 1.2rem;
+border-bottom: 2px solid var(--border);
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 0.25rem 1rem;
+font-size: 0.67rem;
+}
+.emp-field { color: var(--muted); }
+.emp-value { color: var(--ink); font-weight: 600; }
+
+.holerite-body { padding: 0 1.2rem; }
+
+table.items {
+width: 100%;
+border-collapse: collapse;
+margin: 0.6rem 0;
+}
+table.items thead tr {
+background: var(--ink);
+color: var(--paper);
+}
+table.items thead th {
+padding: 0.35rem 0.4rem;
+font-size: 0.6rem;
+font-weight: 600;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+text-align: left;
+}
+table.items th:nth-child(4),
+table.items th:nth-child(5) { text-align: right; }
+
+table.items tbody tr { border-bottom: 1px solid var(--paper-dark); }
+table.items tbody tr:nth-child(even) { background: rgba(0,0,0,0.03); }
+table.items tbody td {
+padding: 0.3rem 0.4rem;
+font-size: 0.67rem;
+color: var(--ink);
+}
+table.items tbody td:nth-child(4) { color: #1a7a1a; font-weight: 600; text-align: right; }
+table.items tbody td:nth-child(5) { color: var(--accent); font-weight: 600; text-align: right; }
+
+.totals-row {
+background: var(--paper-dark);
+border-top: 2px solid var(--border);
+display: flex;
+justify-content: flex-end;
+gap: 1rem;
+padding: 0.4rem 0.4rem;
+font-size: 0.67rem;
+font-weight: 600;
+}
+.total-prov { color: #1a7a1a; }
+.total-desc { color: var(--accent); }
+
+.liquido-box {
+background: var(--ink);
+color: var(--paper);
+margin: 0.6rem 1.2rem;
+padding: 0.6rem 0.9rem;
+border-radius: 4px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+.liquido-label {
+font-size: 0.65rem;
+font-weight: 700;
+letter-spacing: 0.15em;
+text-transform: uppercase;
+color: #aaa;
+}
+.liquido-value {
+font-size: 1.3rem;
+font-weight: 700;
+color: var(--highlight);
+letter-spacing: 0.02em;
+}
+
+.bases-row {
+background: var(--paper-dark);
+border-top: 1px solid var(--border);
+border-bottom: 1px solid var(--border);
+display: flex;
+justify-content: space-around;
+gap: 0.5rem;
+padding: 0.5rem 1.2rem;
+margin-bottom: 0.5rem;
+font-size: 0.62rem;
+}
+.base-item { text-align: center; }
+.base-item .bl { color: var(--muted); display: block; margin-bottom: 0.1rem; }
+.base-item .bv { color: var(--ink); font-weight: 700; font-size: 0.72rem; }
+
+.holerite-footer {
+padding: 0.5rem 1.2rem 1rem;
+font-size: 0.6rem;
+color: var(--muted);
+border-top: 1px dashed var(--border);
+display: flex;
+justify-content: space-between;
+align-items: flex-end;
+}
+.assinatura-line {
+border-top: 1px solid var(--ink);
+margin-top: 1.5rem;
+padding-top: 0.2rem;
+text-align: center;
+font-size: 0.58rem;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--form-bg); }
+::-webkit-scrollbar-thumb { background: var(--form-border); border-radius: 3px; }
+
+/* ── PRINT ── */
+@media print {
+@page { size: A4; margin: 10mm 12mm; }
+body { background: white !important; }
+.no-print, .form-section { display: none !important; }
+.holerite-wrapper {
+background: white !important;
+padding: 0 !important;
+min-height: unset !important;
+}
+.main-layout { display: block !important; }
+.holerite {
+max-width: 100% !important;
+width: 100% !important;
+box-shadow: none !important;
+font-size: 8pt !important;
+}
+.holerite-company { font-size: 10pt !important; }
+.liquido-value { font-size: 14pt !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="main-layout">
+
+<!-- ════════════════ FORMULÁRIO ════════════════ -->
+<aside class="form-section no-print">
+
+<div class="header-block">
+<div class="kicker">⬛ Holerite</div>
+<h1 class="page-title">Calculadora &amp; Emissor</h1>
+<p class="page-subtitle">Preencha os campos para gerar o demonstrativo em tempo real.</p>
+<p class="calc-estimativo-tag">Cálculo Estimativo</p>
+</div>
+
+<!-- DADOS DA EMPRESA -->
+<div class="form-card">
+<div class="section-label">🏢 Dados da Empresa</div>
+<label>Razão Social</label>
+<input type="text" id="empresa" placeholder="Nome da empresa" maxlength="80">
+<label>CNPJ</label>
+<input type="text" id="cnpj" placeholder="00.000.000/0000-00" maxlength="18">
+</div>
+
+<!-- DADOS DO FUNCIONÁRIO -->
+<div class="form-card">
+<div class="section-label">👤 Dados do Funcionário</div>
+<label>Nome Completo</label>
+<input type="text" id="funcionario" placeholder="Nome do funcionário">
+<label>Matrícula</label>
+<input type="text" id="matricula" placeholder="000000">
+<label>Seção / Departamento</label>
+<input type="text" id="secao" placeholder="000.00.00">
+<label>Função / Cargo</label>
+<input type="text" id="funcao" placeholder="Cargo do funcionário">
+<label>Mês / Ano de Competência</label>
+<input type="month" id="mesano">
+</div>
+
+<!-- REMUNERAÇÃO -->
+<div class="form-card">
+<div class="section-label">💰 Remuneração</div>
+<label>Salário Base (R$)</label>
+<input type="number" id="salario" placeholder="1.543,74" min="0" step="0.01">
+<label>Dias Trabalhados / Referência</label>
+<input type="number" id="diasRef" placeholder="30" min="0" max="31">
+
+<div class="subheading" style="color:var(--highlight);font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase">⏱ Horas Extras</div>
+<label>Quantidade de Horas Extras</label>
+<input type="number" id="qtdHE" placeholder="0" min="0" step="0.01">
+<label>Adicional de H.E. (%)</label>
+<input type="number" id="percHE" placeholder="60" min="0" max="200">
+<label>Domingos/Feriados no mês (DSR)</label>
+<input type="number" id="domingos" placeholder="5" min="0" max="10">
+</div>
+
+<!-- MAIS ACRÉSCIMOS (dinâmico) -->
+<div class="form-card">
+<div class="section-label">➕ Mais Acréscimos</div>
+<p style="font-size:0.62rem;color:#667;margin-bottom:0.4rem;">Ex: Comissão, Bônus, Ajuda de Custo, Prêmio...</p>
+<div id="extrasProvList"></div>
+<button type="button" class="btn-add" onclick="addExtraRow('prov')">+ Adicionar Acréscimo</button>
+</div>
+
+<!-- MAIS DESCONTOS (dinâmico) -->
+<div class="form-card">
+<div class="section-label">➖ Mais Descontos</div>
+<p style="font-size:0.62rem;color:#667;margin-bottom:0.4rem;">Ex: Empréstimo, Consignado, Multa, Falta...</p>
+<div id="extrasDescList"></div>
+<button type="button" class="btn-add" onclick="addExtraRow('desc')">+ Adicionar Desconto</button>
+</div>
+
+<!-- DESCONTOS -->
+<div class="form-card">
+<div class="section-label">📉 Descontos Padrão</div>
+
+<div class="toggle-row">
+<div class="flex items-center">
+<input type="checkbox" class="toggle-check" id="chkInss" checked>
+<span class="toggle-label">INSS (automático)</span>
+</div>
+<input type="number" class="toggle-value side-input" id="valInss" readonly placeholder="0,00">
+</div>
+
+<div class="toggle-row">
+<div class="flex items-center">
+<input type="checkbox" class="toggle-check" id="chkVT" checked>
+<span class="toggle-label">Vale Transporte</span>
+</div>
+<input type="number" class="toggle-value side-input" id="valVT" placeholder="0,00" step="0.01">
+</div>
+
+<div class="toggle-row">
+<div class="flex items-center">
+<input type="checkbox" class="toggle-check" id="chkAM" checked>
+<span class="toggle-label">Assistência Médica</span>
+</div>
+<input type="number" class="toggle-value side-input" id="valAM" placeholder="0,00" step="0.01">
+</div>
+
+<div class="toggle-row">
+<div class="flex items-center">
+<input type="checkbox" class="toggle-check" id="chkAdiant" checked>
+<span class="toggle-label">Adiantamento de Salário</span>
+</div>
+<input type="number" class="toggle-value side-input" id="valAdiant" placeholder="0,00" step="0.01">
+</div>
+
+<div class="toggle-row">
+<div class="flex items-center">
+<input type="checkbox" class="toggle-check" id="chkVR" checked>
+<span class="toggle-label">Desc. Vale Refeição</span>
+</div>
+<input type="number" class="toggle-value side-input" id="valVR" placeholder="0,00" step="0.01">
+</div>
+
+<div class="toggle-row">
+<div class="flex items-center">
+<input type="checkbox" class="toggle-check" id="chkCesta" checked>
+<span class="toggle-label">Cesta Básica</span>
+</div>
+<input type="number" class="toggle-value side-input" id="valCesta" placeholder="0,00" step="0.01">
+</div>
+
+<div class="toggle-row">
+<div class="flex items-center">
+<input type="checkbox" class="toggle-check" id="chkCA" checked>
+<span class="toggle-label">Contribuição Assistencial</span>
+</div>
+<input type="number" class="toggle-value side-input" id="valCA" placeholder="0,00" step="0.01">
+</div>
+
+<div class="toggle-row">
+<div class="flex items-center">
+<input type="checkbox" class="toggle-check" id="chkOdonto" checked>
+<span class="toggle-label">Convênio Odontológico</span>
+</div>
+<input type="number" class="toggle-value side-input" id="valOdonto" placeholder="0,00" step="0.01">
+</div>
+
+</div>
+
+<!-- BOTÕES -->
+<button class="btn-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+<button class="btn-clear" onclick="limparFormulario()">↺ Limpar Formulário</button>
+<p class="footnote">Ao salvar como PDF, apenas o holerite será impresso.</p>
+
+<div class="disclaimer-box">
+<strong>⚠ Atenção: Cálculo Estimativo</strong>
+Este resultado é apenas uma simulação e pode haver pequenas diferenças por conta de arredondamentos, convenção coletiva ou regras específicas da sua empresa. Ele não substitui a conferência com o RH, contador ou sindicato. Em caso de dúvida, procure um profissional.
+</div>
+</aside>
+
+<!-- ════════════════ HOLERITE ════════════════ -->
+<main class="holerite-wrapper flex-1">
+<div class="holerite" id="holerite">
+
+<!-- Cabeçalho -->
+<div class="holerite-header">
+<div class="holerite-company" id="h-empresa">RAZÃO SOCIAL DA EMPRESA</div>
+<div class="holerite-cnpj">CNPJ: <span id="h-cnpj">00.000.000/0000-00</span></div>
+<div class="badge-mes" id="h-mesano">MM/AAAA</div>
+<div style="font-size:0.58rem;color:#888;margin-top:0.3rem;font-family:var(--font-sans);">DEMONSTRATIVO DE PAGAMENTO DE SALÁRIO</div>
+</div>
+
+<!-- Dados do funcionário -->
+<div class="holerite-employee">
+<div><span class="emp-field">FUNCIONÁRIO: </span><span class="emp-value" id="h-funcionario">NOME DO FUNCIONÁRIO</span></div>
+<div><span class="emp-field">MATRÍCULA: </span><span class="emp-value" id="h-matricula">—</span></div>
+<div><span class="emp-field">SEÇÃO: </span><span class="emp-value" id="h-secao">—</span></div>
+<div><span class="emp-field">FUNÇÃO: </span><span class="emp-value" id="h-funcao">—</span></div>
+<div><span class="emp-field">SALÁRIO BASE: </span><span class="emp-value" id="h-salariobase">R$ 0,00</span></div>
+<div><span class="emp-field">DIAS REF.: </span><span class="emp-value" id="h-diasref">—</span></div>
+</div>
+
+<!-- Tabela de itens -->
+<div class="holerite-body">
+<table class="items">
+<thead>
+<tr>
+<th style="width:38px">COD</th>
+<th style="width:38px">REF</th>
+<th>DESCRIÇÃO</th>
+<th style="width:80px">PROVENTOS</th>
+<th style="width:80px">DESCONTOS</th>
+</tr>
+</thead>
+<tbody id="h-tbody">
+<!-- Preenchido via JS -->
+</tbody>
+</table>
+
+<!-- Totais -->
+<div class="totals-row">
+<span>TOTAL PROVENTOS: <span class="total-prov" id="h-totprov">R$ 0,00</span></span>
+<span>TOTAL DESCONTOS: <span class="total-desc" id="h-totdesc">R$ 0,00</span></span>
+</div>
+</div>
+
+<!-- Líquido -->
+<div class="liquido-box">
+<div>
+<div class="liquido-label">Valor Líquido a Receber</div>
+<div style="font-size:0.58rem;color:#666;margin-top:0.1rem;font-family:var(--font-sans);">Proventos − Descontos</div>
+</div>
+<div class="liquido-value" id="h-liquido">R$ 0,00</div>
+</div>
+
+<!-- Bases de Cálculo -->
+<div class="bases-row">
+<div class="base-item">
+<span class="bl">BASE INSS</span>
+<span class="bv" id="h-binss">R$ 0,00</span>
+</div>
+<div class="base-item">
+<span class="bl">BASE FGTS</span>
+<span class="bv" id="h-bfgts">R$ 0,00</span>
+</div>
+<div class="base-item">
+<span class="bl">BASE IRRF</span>
+<span class="bv" id="h-birrf">R$ 0,00</span>
+</div>
+<div class="base-item">
+<span class="bl">FGTS MÊS (8%)</span>
+<span class="bv" id="h-fgts">R$ 0,00</span>
+</div>
+</div>
+
+<!-- Rodapé -->
+<div class="holerite-footer">
+<div>
+<div>Documento gerado eletronicamente.</div>
+<div style="margin-top:0.2rem">Este demonstrativo não substitui o recibo original.</div>
+</div>
+<div>
+<div class="assinatura-line" style="width:140px">Assinatura do Funcionário</div>
+</div>
+</div>
+
+<div class="holerite-disclaimer">
+<strong>ATENÇÃO: Cálculo Estimativo.</strong> Este resultado é apenas uma simulação e pode haver pequenas diferenças por conta de arredondamentos, convenção coletiva ou regras específicas da sua empresa. Ele não substitui a conferência com o RH, contador ou sindicato. Em caso de dúvida, procure um profissional.
+</div>
+</div>
+</main>
+</div>
+
+<script>
+// ─── Tabelas INSS 2024 ───────────────────────────────
+const FAIXAS_INSS = [
+{ ate: 1412.00, aliq: 0.075 },
+{ ate: 2666.68, aliq: 0.09 },
+{ ate: 4000.03, aliq: 0.12 },
+{ ate: 7786.02, aliq: 0.14 },
+];
+
+function calcINSS(base) {
+let desconto = 0;
+let anterior = 0;
+for (const faixa of FAIXAS_INSS) {
+if (base <= 0) break;
+const teto = faixa.ate;
+const faixaValor = Math.min(base, teto) - anterior;
+if (faixaValor <= 0) break;
+desconto += faixaValor * faixa.aliq;
+anterior = teto;
+if (base <= teto) break;
+}
+return parseFloat(desconto.toFixed(2));
+}
+
+// ─── Utilitários ─────────────────────────────────────
+const fmt = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtR = (v) => `R$ ${fmt(v)}`;
+
+const $ = (id) => document.getElementById(id);
+
+function val(id, fallback = 0) {
+const v = parseFloat($(id)?.value);
+return isNaN(v) ? fallback : v;
+}
+
+function checked(id) { return $(id)?.checked ?? false; }
+
+// ─── Linhas dinâmicas: Mais Acréscimos / Mais Descontos ──
+let extraCounter = 0;
+
+function addExtraRow(type, presetDesc = '', presetValor = '') {
+extraCounter++;
+const containerId = type === 'prov' ? 'extrasProvList' : 'extrasDescList';
+const container = $(containerId);
+const row = document.createElement('div');
+row.className = 'extra-row';
+row.dataset.extraId = extraCounter;
+row.innerHTML = `
+<input type="text" class="extra-desc" placeholder="${type === 'prov' ? 'Ex: Comissão' : 'Ex: Empréstimo'}" value="${presetDesc}">
+<input type="number" class="extra-valor" placeholder="0,00" step="0.01" value="${presetValor}">
+<button type="button" class="extra-remove" onclick="removeExtraRow(this)">×</button>
+`;
+container.appendChild(row);
+row.querySelectorAll('input').forEach(inp => {
+inp.addEventListener('input', calcular);
+inp.addEventListener('change', calcular);
+});
+calcular();
+}
+
+function removeExtraRow(btn) {
+btn.closest('.extra-row').remove();
+calcular();
+}
+
+function getExtras(type) {
+const containerId = type === 'prov' ? 'extrasProvList' : 'extrasDescList';
+const rows = document.querySelectorAll(`#${containerId} .extra-row`);
+const result = [];
+rows.forEach(row => {
+const desc = row.querySelector('.extra-desc').value.trim();
+const valor = parseFloat(row.querySelector('.extra-valor').value);
+if (desc && !isNaN(valor) && valor > 0) {
+result.push({ desc, valor });
+}
+});
+return result;
+}
+
+// ─── Formata CNPJ/CPF automaticamente ─────────────────
+$('cnpj').addEventListener('input', function() {
+let v = this.value.replace(/\D/g, '');
+if (v.length <= 14) {
+v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+v = v.replace(/(\d{4})(\d)/, '$1-$2');
+}
+this.value = v;
+});
+
+// ─── Cálculo principal ────────────────────────────────
+function calcular() {
+const salario = val('salario');
+const diasRef = val('diasRef', 30);
+const qtdHE = val('qtdHE', 0);
+const percHE = val('percHE', 60);
+const domingos = val('domingos', 5);
+
+// Proventos
+const valorHE = qtdHE > 0
+? parseFloat(((salario / 220) * (1 + percHE / 100) * qtdHE).toFixed(2))
+: 0;
+
+// DSR sobre HE = (HE / dias_úteis_no_mês) * domingos
+const diasUteis = diasRef - domingos;
+const valorDSR = valorHE > 0 && diasUteis > 0
+? parseFloat((valorHE / diasUteis * domingos).toFixed(2))
+: 0;
+
+// Base INSS = Salário + HE + DSR
+const baseINSS = parseFloat((salario + valorHE + valorDSR).toFixed(2));
+const baseFGTS = baseINSS;
+
+// Calcular INSS
+let descINSS = 0;
+if (checked('chkInss')) {
+descINSS = calcINSS(baseINSS);
+$('valInss').value = descINSS.toFixed(2);
+} else {
+$('valInss').value = '0.00';
+}
+
+// Base IRRF = baseINSS - INSS - dependentes (simplificado sem dependentes aqui)
+const baseIRRF = parseFloat((baseINSS - descINSS).toFixed(2));
+
+// Descontos manuais
+const descVT = checked('chkVT') ? val('valVT') : 0;
+const descAM = checked('chkAM') ? val('valAM') : 0;
+const descAdiant = checked('chkAdiant') ? val('valAdiant') : 0;
+const descVR = checked('chkVR') ? val('valVR') : 0;
+const descCesta = checked('chkCesta') ? val('valCesta') : 0;
+const descCA = checked('chkCA') ? val('valCA') : 0;
+const descOdonto = checked('chkOdonto') ? val('valOdonto') : 0;
+
+// Extras dinâmicos (comissão, empréstimo, etc.)
+const extrasProv = getExtras('prov');
+const extrasDesc = getExtras('desc');
+const somaExtrasProv = extrasProv.reduce((s, e) => s + e.valor, 0);
+const somaExtrasDesc = extrasDesc.reduce((s, e) => s + e.valor, 0);
+
+// Totais
+const totalProv = parseFloat((salario + valorHE + valorDSR + somaExtrasProv).toFixed(2));
+const totalDesc = parseFloat((descINSS + descVT + descAM + descAdiant + descVR + descCesta + descCA + descOdonto + somaExtrasDesc).toFixed(2));
+const liquido = parseFloat((totalProv - totalDesc).toFixed(2));
+const fgts = parseFloat((baseFGTS * 0.08).toFixed(2));
+
+// ── Atualiza Holerite ──────────────────────────────
+
+// Cabeçalho
+$('h-empresa').textContent = $('empresa').value || 'RAZÃO SOCIAL DA EMPRESA';
+$('h-cnpj').textContent = $('cnpj').value || '00.000.000/0000-00';
+$('h-funcionario').textContent = $('funcionario').value || 'NOME DO FUNCIONÁRIO';
+$('h-matricula').textContent = $('matricula').value || '000000';
+$('h-secao').textContent = $('secao').value || '—';
+$('h-funcao').textContent = $('funcao').value || '—';
+$('h-salariobase').textContent = salario > 0 ? fmtR(salario) : 'R$ 0,00';
+$('h-diasref').textContent = diasRef;
+
+// Mês/Ano
+const mesAnoVal = $('mesano').value;
+if (mesAnoVal) {
+const [ano, mes] = mesAnoVal.split('-');
+$('h-mesano').textContent = `${mes}/${ano}`;
+} else {
+$('h-mesano').textContent = 'MM/AAAA';
+}
+
+// Linhas da tabela
+const itens = [];
+
+itens.push({ cod:'0001', ref: fmt(diasRef), desc:'SALÁRIO', prov: salario > 0 ? salario : null, desc_val: null });
+if (valorDSR > 0)
+itens.push({ cod:'0159', ref: fmt(domingos), desc:'D.S.R. SOBRE HORAS EXTRAS', prov: valorDSR, desc_val: null });
+if (valorHE > 0)
+itens.push({ cod:'0253', ref: fmt(qtdHE), desc:`HORA EXTRAS ${percHE}%`, prov: valorHE, desc_val: null });
+if (checked('chkInss') && descINSS > 0)
+itens.push({ cod:'0003', ref: '9,00', desc:'I.N.S.S.', desc_val: descINSS, prov: null });
+if (checked('chkVT') && descVT > 0)
+itens.push({ cod:'0006', ref: '—', desc:'VALE TRANSPORTE', desc_val: descVT, prov: null });
+if (checked('chkAM') && descAM > 0)
+itens.push({ cod:'0014', ref: '—', desc:'ASSISTÊNCIA MÉDICA', desc_val: descAM, prov: null });
+if (checked('chkAdiant') && descAdiant > 0)
+itens.push({ cod:'0019', ref: '—', desc:'ADIANTAMENTO DE SALÁRIO', desc_val: descAdiant, prov: null });
+if (checked('chkVR') && descVR > 0)
+itens.push({ cod:'0064', ref: '—', desc:'DESC. VALE REFEIÇÃO', desc_val: descVR, prov: null });
+if (checked('chkCesta') && descCesta > 0)
+itens.push({ cod:'0100', ref: '—', desc:'CESTA BÁSICA', desc_val: descCesta, prov: null });
+if (checked('chkCA') && descCA > 0)
+itens.push({ cod:'0184', ref: '—', desc:'CONTRIBUIÇÃO ASSISTENCIAL',desc_val: descCA, prov: null });
+if (checked('chkOdonto') && descOdonto > 0)
+itens.push({ cod:'0377', ref: '—', desc:'DESC. CONV. ODONTOLÓGICO', desc_val: descOdonto, prov: null });
+extrasProv.forEach(e =>
+itens.push({ cod:'EX+', ref: '—', desc: e.desc.toUpperCase(), prov: e.valor, desc_val: null }));
+extrasDesc.forEach(e =>
+itens.push({ cod:'EX-', ref: '—', desc: e.desc.toUpperCase(), desc_val: e.valor, prov: null }));
+
+// Preencher tbody
+const tbody = $('h-tbody');
+tbody.innerHTML = '';
+for (const item of itens) {
+const tr = document.createElement('tr');
+tr.innerHTML = `
+<td>${item.cod}</td>
+<td>${item.ref}</td>
+<td>${item.desc}</td>
+<td>${item.prov != null ? fmtR(item.prov) : ''}</td>
+<td>${item.desc_val != null ? fmtR(item.desc_val) : ''}</td>
+`;
+tbody.appendChild(tr);
+}
+
+// Totais e Líquido
+$('h-totprov').textContent = fmtR(totalProv);
+$('h-totdesc').textContent = fmtR(totalDesc);
+$('h-liquido').textContent = fmtR(Math.max(liquido, 0));
+
+// Bases
+$('h-binss').textContent = fmtR(baseINSS);
+$('h-bfgts').textContent = fmtR(baseFGTS);
+$('h-birrf').textContent = fmtR(baseIRRF);
+$('h-fgts').textContent = fmtR(fgts);
+}
+
+// ─── Listeners ───────────────────────────────────────
+document.querySelectorAll('input').forEach(inp => {
+inp.addEventListener('input', calcular);
+inp.addEventListener('change', calcular);
+});
+
+// ─── Limpar ──────────────────────────────────────────
+function limparFormulario() {
+if (!confirm('Deseja limpar todos os campos?')) return;
+['empresa','cnpj','funcionario','matricula','secao','funcao'].forEach(id => $(id).value = '');
+$('mesano').value = '';
+$('salario').value = '';
+$('diasRef').value = '';
+$('qtdHE').value = '';
+$('percHE').value = '';
+$('domingos').value = '';
+['chkInss','chkVT','chkAM','chkAdiant','chkVR','chkCesta','chkCA','chkOdonto'].forEach(id => $(id).checked = true);
+['valVT','valAM','valAdiant','valVR','valCesta','valCA','valOdonto'].forEach(id => $(id).value = '');
+$('extrasProvList').innerHTML = '';
+$('extrasDescList').innerHTML = '';
+calcular();
+}
+
+// ─── Init em branco ────────────────────────────────
+(function init() {
+calcular();
+})();
+</script>
+</body>
+</html>
